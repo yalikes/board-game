@@ -1,0 +1,1 @@
+pub const SELECTED_CSS:&str = "selected";
