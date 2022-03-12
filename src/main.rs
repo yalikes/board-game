@@ -43,11 +43,6 @@ fn build_ui(app: &Application, gamemodel: &Arc<Mutex<GameModel>>) {
             main_grid.attach(&button, j as i32, i as i32, 1, 1);
         }
     }
-    main_grid
-        .child_at(2, 2)
-        .unwrap()
-        .add_css_class(constants::SELECTED_CSS);
-    gamemodel.lock().unwrap().select_1 = Some((2, 2));
     let window = ApplicationWindow::builder()
         .application(app)
         .title("push box")
@@ -71,48 +66,24 @@ fn load_css() {
 
 fn board_clicked(gamemodel: &Arc<Mutex<GameModel>>, grid: Grid, pos: (usize, usize)) {
     let mut gamemodel_ref = gamemodel.lock().unwrap();
-    if let Some(pos1) = (*gamemodel_ref).select_1 {
-        if pos1 == pos {
-            (*gamemodel_ref).select_1 = None;
-            grid.child_at(pos.1 as i32, pos.0 as i32)
-                .unwrap()
-                .remove_css_class(constants::SELECTED_CSS);
-        } else if (*gamemodel_ref).gamemap.is_valid_action(pos1, pos) {
-            grid.child_at(pos1.1 as i32, pos1.0 as i32)
-                .unwrap()
-                .remove_css_class(constants::SELECTED_CSS);
-            (*gamemodel_ref).gamemap.swap_pos(pos1, pos);
-            (*gamemodel_ref).select_1 = None;
-            (*gamemodel_ref).select_2 = None;
 
-            let label_text1 = match (*gamemodel_ref).gamemap.map[pos1.0][pos1.1] {
-                Some(i) => format!("{}", i),
-                None => String::from(" "),
-            };
+    if (*gamemodel_ref).is_valid_action(pos) {
+        let empty_pos = (*gamemodel_ref).empty_pos;
+        let i = (*gamemodel_ref).gamemap.map[pos.0][pos.1].unwrap();
+        (*gamemodel_ref).empty_pos = pos;
+        (*gamemodel_ref).gamemap.swap_pos(empty_pos, pos);
+        let empty_text = " ";
 
-            let label_text2 = match (*gamemodel_ref).gamemap.map[pos.0][pos.1] {
-                Some(i) => format!("{}", i),
-                None => String::from(" "),
-            };
-
-            grid.child_at(pos1.1 as i32, pos1.0 as i32)
-                .unwrap()
-                .downcast::<Button>()
-                .expect("downcast widget to button failed!")
-                .set_label(&label_text1);
-            grid.child_at(pos.1 as i32, pos.0 as i32)
-                .unwrap()
-                .downcast::<Button>()
-                .expect("downcast widget to button failed!")
-                .set_label(&label_text2);
-        }
-    } else if (*gamemodel_ref).gamemap.is_valid_selection(pos) {
-        (*gamemodel_ref).select_1 = Some(pos);
         grid.child_at(pos.1 as i32, pos.0 as i32)
             .unwrap()
             .downcast::<Button>()
             .expect("downcast widget to button failed!")
-            .add_css_class(constants::SELECTED_CSS);
+            .set_label(&empty_text);
+        grid.child_at(empty_pos.1 as i32, empty_pos.0 as i32)
+            .unwrap()
+            .downcast::<Button>()
+            .expect("downcast widget to button failed!")
+            .set_label(&format!("{}", i));
     }
     if (*gamemodel_ref).gamemap.is_completed() {
         println!("YOU WIN!");

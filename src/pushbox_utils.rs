@@ -4,8 +4,7 @@ use rand::seq::SliceRandom;
 #[derive(Debug)]
 pub struct GameModel {
     pub gamemap: GameMap,
-    pub select_1: Option<(usize, usize)>,
-    pub select_2: Option<(usize, usize)>,
+    pub empty_pos: (usize, usize),
 }
 
 impl GameModel {
@@ -13,8 +12,16 @@ impl GameModel {
         let gamemap = GameMap::new();
         GameModel {
             gamemap,
-            select_1: None,
-            select_2: None,
+            empty_pos: (2, 2),
+        }
+    }
+    pub fn is_valid_action(&self, pos: (usize, usize)) -> bool {
+        let distance = (self.empty_pos.0 as i32 - pos.0 as i32).abs()
+            + (self.empty_pos.1 as i32 - pos.1 as i32).abs();
+        if distance == 1 {
+            return true;
+        } else {
+            return false;
         }
     }
 }
@@ -50,31 +57,6 @@ impl GameMap {
         let temp = self.map[pos1.0][pos1.1];
         self.map[pos1.0][pos1.1] = self.map[pos2.0][pos2.1];
         self.map[pos2.0][pos2.1] = temp;
-    }
-
-    pub fn is_valid_action(&self, pos1: (usize, usize), pos2: (usize, usize)) -> bool {
-        if pos1 == pos2 {
-            return false;
-        } else if self.map[pos1.0][pos1.1].is_none() || self.map[pos2.0][pos2.1].is_none() {
-            return (pos1.0 as i32 - pos2.0 as i32).abs() + (pos1.1 as i32 - pos2.1 as i32).abs()
-                == 1;
-        }
-        return false;
-    }
-
-    pub fn is_valid_selection(&self, pos: (usize, usize)) -> bool {
-        let mut none_pos = (0, 0);
-        for i in 0..3 {
-            for j in 0..3 {
-                if self.map[i][j].is_none() {
-                    none_pos.0 = i;
-                    none_pos.1 = j;
-                }
-            }
-        }
-        pos == none_pos
-            || ((pos.0 as i32 - none_pos.0 as i32).abs() + (pos.1 as i32 - none_pos.1 as i32).abs())
-                == 1
     }
 
     pub fn is_completed(&self) -> bool {
